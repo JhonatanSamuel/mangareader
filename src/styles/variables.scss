@@ -1,0 +1,32 @@
+:root {
+  --bg-color: #fffcfc;
+  --text-color: #121212;
+  --card-bg: #f1f1f1;
+  --card-border: #cccccc;
+  --button-bg: #4e54c8;
+  --button-text: #ffffff;
+  --button-hover: #6c70e0;
+  --disabled-bg: #ccc;
+  --text-color: #1a1a1a;
+  --background-color: #fff;
+  --card-bg: #f1f1f1;
+  --accent-color: #007bff;
+  --border-color: #ccc;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1.5rem;
+}
+
+.dark {
+  --bg-color: #121212;
+  --text-color: #ffffff;
+  --card-bg: #1e1e1e;
+  --card-border: #333333;
+  --button-bg: #6c70e0;
+  --button-text: #ffffff;
+  --button-hover: #8a8dec;
+  --disabled-bg: #444;
+  --background-color: #121212;
+  --accent-color: #007bff;
+  --border-color: #444;
+}
+

@@ -1,0 +1,20 @@
+// Reset básico
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  // Fonte e cor base
+  body {
+    font-family: sans-serif;
+    background-color: #f4f4f4;
+    color: #222;
+  }
+  
+  // Links sem sublinhado
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+  
