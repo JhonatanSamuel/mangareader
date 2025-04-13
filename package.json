@@ -2,7 +2,6 @@
   "name": "mangaland",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://JhonatanSamuel.github.io/mangaland",
   "type": "module",
   "scripts": {
     "dev": "vite",
