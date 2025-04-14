@@ -14,17 +14,16 @@ const statuses = [
   { value: 'completed', label: 'Completed' },
 ];
 
-
-
 function Home() {
-    const fetchCover = async (mangaId: string) => {
-      const response = await fetch('https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=10&includes[]=cover_art&order[followedCount]=desc');
-      const data = await response.json();
-      const fileName = data.data[0]?.attributes?.fileName;
-      return fileName
-        ? `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`
-        : null;
-    };
+  // Corrigido: usando a rota correta do proxy para pegar a capa
+  const fetchCover = async (mangaId: string) => {
+    const response = await fetch(`https://mangadex-proxy-2i3k.onrender.com/api/cover?limit=1&manga[]=${mangaId}`);
+    const data = await response.json();
+    const fileName = data.data[0]?.attributes?.fileName;
+    return fileName
+      ? `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`
+      : null;
+  };
 
   interface Manga {
     id: string;
@@ -42,10 +41,9 @@ function Home() {
   const [searchQuery, setSearchQuery] = useState('');
   const [readingHistory, setReadingHistory] = useState<any[]>([]);
 
-
   useEffect(() => {
     const fetchFilteredMangas = async () => {
-      let url = 'https://api.mangadex.org/manga?limit=100&includes[]=cover_art';
+      let url = 'https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=100&includes[]=cover_art';
       if (selectedStatus) url += `&status[]=${selectedStatus}`;
       if (selectedGenre) url += `&includedTags[]=${selectedGenre}`;
       if (searchQuery) url += `&title=${encodeURIComponent(searchQuery)}`;
@@ -63,7 +61,6 @@ function Home() {
     fetchFilteredMangas();
   }, [selectedGenre, selectedStatus, searchQuery]);
 
-
   useEffect(() => {
     const stored = localStorage.getItem('readingHistory');
     if (stored) {
@@ -78,12 +75,12 @@ function Home() {
   useEffect(() => {
     const stored = localStorage.getItem('readingHistory');
     if (!stored) return;
-  
+
     const parsed = JSON.parse(stored);
     const sorted = Object.values(parsed).sort((a: any, b: any) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  
+
     const loadCovers = async () => {
       const withCovers = await Promise.all(
         sorted.map(async (item: any) => {
@@ -93,33 +90,30 @@ function Home() {
       );
       setReadingHistory(withCovers);
     };
-  
+
     loadCovers();
   }, []);
-  
 
   const handleRemoveFromHistory = (idToRemove: string) => {
     const stored = localStorage.getItem('readingHistory');
     if (!stored) return;
-  
+
     const parsed = JSON.parse(stored);
     delete parsed[idToRemove];
-  
+
     localStorage.setItem('readingHistory', JSON.stringify(parsed));
-  
+
     const updatedHistory = Object.values(parsed).sort((a: any, b: any) =>
       new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
     );
-  
+
     setReadingHistory(updatedHistory);
   };
-  
-  
 
   useEffect(() => {
     const fetchTopMangas = async () => {
       const url =
-        'https://api.mangadex.org/manga?limit=10&includes[]=cover_art&order[followedCount]=desc';
+        'https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=10&includes[]=cover_art&order[followedCount]=desc';
 
       try {
         const res = await fetch(url);
@@ -136,7 +130,6 @@ function Home() {
 
   return (
     <div>
-      
       <h2>Explore Manga</h2>
 
       <div className="search-bar">
@@ -149,8 +142,6 @@ function Home() {
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
-
-
 
       <div className="filters">
         <label htmlFor="genre-select">Genre</label>
@@ -183,26 +174,26 @@ function Home() {
       </div>
 
       {readingHistory.length > 0 && (
-      <div className="reading-history">
-        <h2>Continue lendo</h2>
-        <div className="manga-grid">
-          {readingHistory.map((item: any) => (
-            <div key={item.mangaId} className="manga-history-card">
-              <Link to={`/manga/${item.mangaId}/chapter/${item.chapterId}`}>
-              {item.coverUrl && (
-                  <img src={item.coverUrl} alt={item.title} className="history-cover" />
-                )}
-                <div className="history-title">{item.title}</div>
-                <div className="chapter-info">Capítulo {item.chapterNumber || ''} {item.chapterTitle || ''}</div>
-
-              </Link>
-              <button onClick={() => handleRemoveFromHistory(item.mangaId)}>✖</button>
-            </div>
-          ))}
+        <div className="reading-history">
+          <h2>Continue lendo</h2>
+          <div className="manga-grid">
+            {readingHistory.map((item: any) => (
+              <div key={item.mangaId} className="manga-history-card">
+                <Link to={`/manga/${item.mangaId}/chapter/${item.chapterId}`}>
+                  {item.coverUrl && (
+                    <img src={item.coverUrl} alt={item.title} className="history-cover" />
+                  )}
+                  <div className="history-title">{item.title}</div>
+                  <div className="chapter-info">
+                    Capítulo {item.chapterNumber || ''} {item.chapterTitle || ''}
+                  </div>
+                </Link>
+                <button onClick={() => handleRemoveFromHistory(item.mangaId)}>✖</button>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    )}
-
+      )}
 
       <h2 className="section-title">Top 10 Most Popular Mangas</h2>
       <div className="ranking-carousel">
