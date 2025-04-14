@@ -20,13 +20,15 @@ const statuses = [
 function Home() {
   // ✅ Agora usa a constante base
   const fetchCover = async (mangaId: string) => {
-    const response = await fetch(`${API_BASE_URL}/cover?limit=1&manga[]=${mangaId}`);
+    const response = await fetch(`${API_BASE_URL}/manga/${mangaId}?includes[]=cover_art`);
     const data = await response.json();
-    const fileName = data.data[0]?.attributes?.fileName;
+    const fileName = data.data?.relationships?.find((rel: any) => rel.type === 'cover_art')?.attributes?.fileName;
+  
     return fileName
       ? `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`
       : null;
   };
+  
 
   interface Manga {
     id: string;
