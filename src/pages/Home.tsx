@@ -18,7 +18,7 @@ const statuses = [
 
 function Home() {
     const fetchCover = async (mangaId: string) => {
-      const response = await fetch(`https://mangadex-proxy-2i3k.onrender.com/api/cover?limit=1&manga[]=${mangaId}`);
+      const response = await fetch('https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=10&includes[]=cover_art&order[followedCount]=desc');
       const data = await response.json();
       const fileName = data.data[0]?.attributes?.fileName;
       return fileName
