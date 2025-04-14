@@ -3,6 +3,9 @@ import MangaCard from '../components/MangaCard';
 import { Link } from 'react-router-dom';
 import '../styles/Home.scss';
 
+// ✅ Constante com a URL do seu proxy
+const API_BASE_URL = 'https://mangadex-proxy-2i3k.onrender.com/api';
+
 const genres = [
   { id: 'b13b2a48-c720-44a9-9c77-39c9979373fb', name: 'Action' },
   { id: '391b0423-d847-456f-aff0-8b0cfc03066b', name: 'Romance' },
@@ -15,9 +18,9 @@ const statuses = [
 ];
 
 function Home() {
-  // Corrigido: usando a rota correta do proxy para pegar a capa
+  // ✅ Agora usa a constante base
   const fetchCover = async (mangaId: string) => {
-    const response = await fetch(`https://mangadex-proxy-2i3k.onrender.com/api/cover?limit=1&manga[]=${mangaId}`);
+    const response = await fetch(`${API_BASE_URL}/cover?limit=1&manga[]=${mangaId}`);
     const data = await response.json();
     const fileName = data.data[0]?.attributes?.fileName;
     return fileName
@@ -43,7 +46,7 @@ function Home() {
 
   useEffect(() => {
     const fetchFilteredMangas = async () => {
-      let url = 'https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=100&includes[]=cover_art';
+      let url = `${API_BASE_URL}/manga?limit=100&includes[]=cover_art`;
       if (selectedStatus) url += `&status[]=${selectedStatus}`;
       if (selectedGenre) url += `&includedTags[]=${selectedGenre}`;
       if (searchQuery) url += `&title=${encodeURIComponent(searchQuery)}`;
@@ -112,8 +115,7 @@ function Home() {
 
   useEffect(() => {
     const fetchTopMangas = async () => {
-      const url =
-        'https://mangadex-proxy-2i3k.onrender.com/api/manga?limit=10&includes[]=cover_art&order[followedCount]=desc';
+      const url = `${API_BASE_URL}/manga?limit=10&includes[]=cover_art&order[followedCount]=desc`;
 
       try {
         const res = await fetch(url);
