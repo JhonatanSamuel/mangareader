@@ -15,30 +15,22 @@ function ChapterReader() {
   interface Chapter {
     id: string;
     attributes: {
-      chapter: string;
+      chapter: string | null;
       title?: string;
     };
   }
 
-  // 1. Buscar imagens do capítulo + número do capítulo
   const fetchChapterData = useCallback(async (chapterId: string) => {
     setLoading(true);
     try {
-      // Pega dados do capítulo
       const chapterRes = await fetch(`https://api.mangadex.org/chapter/${chapterId}`);
       const chapterData = await chapterRes.json();
       const attributes = chapterData.data.attributes;
-      setChapterNumber(attributes.chapter || '');
-      
-      // Salva o mangaId se ainda não estiver salvo
-      interface Relationship {
-        id: string;
-        type: string;
-      }
-      const mangaRel = chapterData.data.relationships.find((rel: Relationship) => rel.type === 'manga');
+      setChapterNumber(attributes.chapter || 'Especial');
+
+      const mangaRel = chapterData.data.relationships.find((rel: any) => rel.type === 'manga');
       if (mangaRel) setMangaId(mangaRel.id);
 
-      // Pega imagens
       const res = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
       const data = await res.json();
       const baseUrl = data.baseUrl;
@@ -53,15 +45,12 @@ function ChapterReader() {
     }
   }, []);
 
-  // 2. Buscar dados do mangá e capítulos
   const fetchMangaAndChapters = useCallback(async (mangaId: string) => {
     try {
-      // Título
       const mangaRes = await fetch(`https://api.mangadex.org/manga/${mangaId}?includes[]=cover_art`);
       const mangaData = await mangaRes.json();
       setMangaTitle(mangaData.data.attributes.title?.en || 'Sem título');
 
-      // Lista de capítulos
       const chaptersRes = await fetch(`https://api.mangadex.org/chapter?manga=${mangaId}&translatedLanguage[]=en&order[chapter]=asc&limit=100`);
       const chaptersData = await chaptersRes.json();
       setChapters(chaptersData.data);
@@ -70,14 +59,12 @@ function ChapterReader() {
     }
   }, []);
 
-  // 3. Carregar dados quando capítulo mudar
   useEffect(() => {
     if (chapterId) {
       fetchChapterData(chapterId);
     }
   }, [chapterId, fetchChapterData]);
 
-  // 4. Quando mangaId mudar, buscar info do mangá
   useEffect(() => {
     if (mangaId) {
       fetchMangaAndChapters(mangaId);
@@ -95,87 +82,70 @@ function ChapterReader() {
     }
   };
 
-
-
-  const renderImages = useCallback(() => {
-    return images.map((url, index) => (
-      <img
-        key={index}
-        src={url}
-        alt={`Página ${index + 1}`}
-        className="chapter-image"
-        loading="lazy"
-      />
-    ));
-  }, [images]);
-
   useEffect(() => {
     if (mangaId && chapterId && mangaTitle) {
       const history = JSON.parse(localStorage.getItem('readingHistory') || '{}');
-  
       history[mangaId] = {
         mangaId,
         chapterId,
         title: mangaTitle,
         updatedAt: new Date().toISOString(),
       };
-  
       localStorage.setItem('readingHistory', JSON.stringify(history));
     }
   }, [mangaId, chapterId, mangaTitle]);
-  
 
   if (loading) return <div>Loading images...</div>;
 
   return (
     <div className="chapter-reader">
-      <Link to="/" className="back-button">← Back to Home </Link>
+      <Link to="/" className="back-button">← Voltar para Home</Link>
 
-      {/* Navegação entre capítulos */}
       <div className="chapter-navigation">
         <button onClick={() => previousChapter && navigate(`/chapter/${previousChapter.id}`)} disabled={!previousChapter}>
-          ⬅ Previous Chapter
+          ⬅ Capítulo Anterior
         </button>
 
         <h2 className="chapter-info">
-          {mangaTitle ? `${mangaTitle} - Capítulo ${chapterNumber}` : `Capítulo ${chapterNumber}`}
+          {mangaTitle} - Capítulo {chapterNumber}
         </h2>
 
         <button onClick={() => nextChapter && navigate(`/chapter/${nextChapter.id}`)} disabled={!nextChapter}>
-        Next Chapter ➡
+          Próximo Capítulo ➡
         </button>
       </div>
 
-      {/* Seletor de capítulos */}
       {chapters.length > 0 && (
         <div className="chapter-selector">
-          <label htmlFor="chapter-select">Select the Chapter</label>
-          <select
-            id="chapter-select"
-            onChange={handleChapterChange}
-            value={chapterId}
-          >
+          <label htmlFor="chapter-select">Selecione o Capítulo</label>
+          <select id="chapter-select" onChange={handleChapterChange} value={chapterId}>
             {chapters.map((chapter) => (
               <option key={chapter.id} value={chapter.id}>
-                Chapter {chapter.attributes.chapter}
+                Capítulo {chapter.attributes.chapter || 'Especial'}
               </option>
             ))}
           </select>
         </div>
       )}
 
-      {/* Imagens do capítulo */}
       <div className="chapter-images">
-        {renderImages()}
+        {images.map((url, index) => (
+          <img
+            key={index}
+            src={url}
+            alt={`Página ${index + 1}`}
+            className="chapter-image"
+            loading="lazy"
+          />
+        ))}
       </div>
 
-      {/* Botões no fim */}
       <div className="chapter-navigation">
         <button onClick={() => previousChapter && navigate(`/chapter/${previousChapter.id}`)} disabled={!previousChapter}>
-          ⬅ Previous Chapter
+          ⬅ Capítulo Anterior
         </button>
         <button onClick={() => nextChapter && navigate(`/chapter/${nextChapter.id}`)} disabled={!nextChapter}>
-           Next Chapter ➡
+          Próximo Capítulo ➡
         </button>
       </div>
     </div>

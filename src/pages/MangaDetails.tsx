@@ -2,13 +2,13 @@ import { useParams, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import '../styles/MangaDetails.scss';
 
-
 function MangaDetails() {
   const { id } = useParams();
+
   interface Manga {
     id: string;
     attributes: {
-      title?: { en?: string };
+      title?: { [key: string]: string };
       description?: { en?: string };
       status?: string;
     };
@@ -20,18 +20,16 @@ function MangaDetails() {
     }[];
   }
 
-  const [manga, setManga] = useState<Manga | null>(null);
-  const [coverUrl, setCoverUrl] = useState<string>('');
   interface Chapter {
     id: string;
     attributes: {
       chapter: string | null;
     };
   }
-  
+
+  const [manga, setManga] = useState<Manga | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string>('');
   const [chapters, setChapters] = useState<Chapter[]>([]);
-
-
 
   useEffect(() => {
     async function fetchManga() {
@@ -40,53 +38,48 @@ function MangaDetails() {
       const mangaData = data.data;
       setManga(mangaData);
 
-      interface Relationship {
-        type: string;
-        attributes?: {
-          fileName?: string;
-        };
-      }
-
-      const coverArt = mangaData.relationships.find((rel: Relationship) => rel.type === 'cover_art');
+      const coverArt = mangaData.relationships.find((rel: any) => rel.type === 'cover_art');
       if (coverArt) {
-        const fileName = coverArt.attributes.fileName;
+        const fileName = coverArt.attributes?.fileName;
         const url = `https://uploads.mangadex.org/covers/${mangaData.id}/${fileName}`;
         setCoverUrl(url);
       }
     }
 
-    fetchManga();
-
     async function fetchChapters() {
-      const res = await fetch(`https://api.mangadex.org/chapter?manga=${id}&translatedLanguage[]=en&order[chapter]=asc&limit=10`);
+      const res = await fetch(`https://api.mangadex.org/chapter?manga=${id}&translatedLanguage[]=en&order[chapter]=asc&limit=100`);
       const data = await res.json();
-      setChapters(data.data);
+      const sortedChapters = data.data.sort((a: Chapter, b: Chapter) => 
+        (parseFloat(a.attributes.chapter || "0") - parseFloat(b.attributes.chapter || "0"))
+      );
+      setChapters(sortedChapters);
     }
 
-    fetchChapters();
+    if (id) {
+      fetchManga();
+      fetchChapters();
+    }
   }, [id]);
 
   if (!manga) return <div>Loading...</div>;
 
-
   return (
-    <div className='manga-details'>
-      
+    <div className="manga-details">
       <h1>{manga.attributes.title?.en || 'Sem título'}</h1>
-      {coverUrl && <img className='reader-image' src={coverUrl} alt={manga.attributes.title?.en || 'Capa do mangá'} />}
+      {coverUrl && <img className="reader-image" src={coverUrl} alt={manga.attributes.title?.en || 'Capa do mangá'} />}
       <p dangerouslySetInnerHTML={{ __html: manga.attributes.description?.en || 'Sem descrição disponível.' }}></p>
       <p><strong>Status:</strong> {manga.attributes.status || 'Desconhecido'}</p>
-      <h2>Chapters</h2>
+
+      <h2>Capítulos</h2>
       <ul>
         {chapters.map((chap: Chapter) => (
           <li key={chap.id}>
-            <Link className='link' to={`/chapter/${chap.id}`}>
-            Chapters {chap.attributes.chapter || 'N/A'}
+            <Link className="link" to={`/chapter/${chap.id}`}>
+              Capítulo {chap.attributes.chapter || 'Especial'}
             </Link>
           </li>
         ))}
       </ul>
-
     </div>
   );
 }

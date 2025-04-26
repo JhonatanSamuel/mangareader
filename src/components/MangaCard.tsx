@@ -1,7 +1,22 @@
 import { Link } from 'react-router-dom';
 import './MangaCard.scss';
 
-function MangaCard({ manga }: { manga: any }) {
+interface MangaCardProps {
+  manga: {
+    id: string;
+    attributes: {
+      title: { [key: string]: string };
+    };
+    relationships: {
+      type: string;
+      attributes?: {
+        fileName?: string;
+      };
+    }[];
+  };
+}
+
+function MangaCard({ manga }: MangaCardProps) {
   if (!manga || !manga.relationships || !manga.attributes?.title) {
     return null;
   }
@@ -9,9 +24,10 @@ function MangaCard({ manga }: { manga: any }) {
   const title =
     manga.attributes.title.en ||
     manga.attributes.title.pt ||
-    Object.values(manga.attributes.title)[0]; // Pega o primeiro disponível
+    Object.values(manga.attributes.title)[0] ||
+    'Sem título';
 
-  const coverRel = manga.relationships.find((r: any) => r.type === 'cover_art');
+  const coverRel = manga.relationships.find((r) => r.type === 'cover_art');
   const coverFile = coverRel?.attributes?.fileName;
 
   if (!coverFile) return null;
@@ -20,7 +36,7 @@ function MangaCard({ manga }: { manga: any }) {
 
   return (
     <Link to={`/manga/${manga.id}`} className="manga-card">
-      <img src={coverUrl} alt={title} />
+      <img src={coverUrl} alt={title} onError={(e) => (e.currentTarget.src = '/fallback-cover.jpg')} />
       <h3>{title}</h3>
     </Link>
   );
